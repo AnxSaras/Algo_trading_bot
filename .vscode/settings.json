@@ -5,25 +5,12 @@
                 "authProtocol": "default",
                 "enableSsl": "Disabled"
             },
-            "previewLimit": 500,
-            "server": "localhost",
-            "port": 3306,
-            "driver": "MySQL",
-            "name": "securities_master",
-            "username": "sec_user",
-            "database": "Sql_fyers_tables"
-        },
-        {
-            "mysqlOptions": {
-                "authProtocol": "default",
-                "enableSsl": "Disabled"
-            },
             "previewLimit": 50,
             "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "securities_master",
-            "database": "securities_master",
+            "name": "Anx",
+            "database": "Algo_trading",
             "username": "sec_user"
         }
     ]

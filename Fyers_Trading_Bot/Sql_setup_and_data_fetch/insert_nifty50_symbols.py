@@ -2,12 +2,13 @@ import datetime
 import pandas as pd
 from fyers_apiv3 import fyersModel
 from sqlalchemy import create_engine
+from sqlalchemy import text
 import urllib.parse
 
 # 🔹 Encode Password for MySQL Connection
-DB_USER = "Algo_Trading"
+DB_USER = "sec_user"
 DB_PASS = "Apple@1331"
-DB_NAME = "Historical_data_2024"
+DB_NAME = "Algo_trading"
 DB_HOST = "localhost"
 
 ENCODED_PASS = urllib.parse.quote_plus(DB_PASS)
@@ -51,7 +52,7 @@ def fetch_nifty50_symbols():
                 name = stock_info.get("name", ticker)
                 sector = stock_info.get("sector", "Unknown")
                 industry = stock_info.get("industry", "Unknown")
-                isin = stock_info.get("isin", "Unknown")
+                isin = stock_info.get("isin", None)  # Ensure None for NULL in DB
 
                 symbols.append((1, ticker, name, sector, industry, isin, now, now))
             else:
@@ -60,11 +61,12 @@ def fetch_nifty50_symbols():
         except Exception as e:
             print(f"❌ Error fetching data for {ticker}: {e}")
 
+    print(f"✅ Symbols fetched: {len(symbols)}")  # Debug log
     return symbols
 
 # 🔹 Insert Data into MySQL
 def insert_symbols_to_db(symbols):
-    """Insert symbols into the MySQL database, avoiding duplicates."""
+    """Insert symbols into MySQL, avoiding duplicates and handling NULL ISINs."""
     if not symbols:
         print("⚠️ No symbols to insert.")
         return
@@ -72,15 +74,36 @@ def insert_symbols_to_db(symbols):
     # ✅ Create SQLAlchemy Engine
     engine = create_engine(SQL_CONNECTION_STRING)
 
+    # ✅ Debugging: Check Symbols List Format
+    print("🔍 Checking symbols format before inserting:")
+    for sym in symbols[:5]:  # Print only first 5 for debugging
+        print(sym)
+
     # ✅ Convert Data to DataFrame
     column_names = ["exchange_id", "ticker", "name", "sector", "industry", "isin", "created_date", "last_updated_date"]
     df = pd.DataFrame(symbols, columns=column_names)
 
-    try:
-        # ✅ Insert into MySQL, handling duplicates
-        df.to_sql(name='symbol', con=engine, if_exists='append', index=False)
+    # ✅ Ensure `None` values are converted to `NULL`
+    df = df.where(pd.notnull(df), None)
 
-        print(f"✅ Successfully inserted {len(symbols)} NIFTY 50 symbols into MySQL.")
+    try:
+        # ✅ Insert into MySQL using dictionaries (SQLAlchemy)
+        with engine.begin() as conn:
+            sql_query = text("""  
+                INSERT INTO symbol (exchange_id, ticker, name, sector, industry, isin, created_date, last_updated_date)  
+                VALUES (:exchange_id, :ticker, :name, :sector, :industry, :isin, :created_date, :last_updated_date)  
+                ON DUPLICATE KEY UPDATE  
+                    name = VALUES(name),  
+                    sector = VALUES(sector),  
+                    industry = VALUES(industry),  
+                    last_updated_date = VALUES(last_updated_date);  
+            """)
+
+            for _, row in df.iterrows():
+                conn.execute(sql_query, row.to_dict())  # ✅ Use text() wrapped query
+
+        print(f"✅ Successfully inserted/updated {len(symbols)} NIFTY 50 symbols into MySQL.")
+
     except Exception as e:
         print(f"❌ Error inserting into MySQL: {e}")
 

@@ -5,17 +5,19 @@ from fyers_apiv3 import fyersModel
 
 # ✅ Fyers API Credentials
 app_id = "ISVT1FBO9P-100"
-access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJhcGkuZnllcnMuaW4iLCJpYXQiOjE3NDIzNTgyNTksImV4cCI6MTc0MjQzMDYxOSwibmJmIjoxNzQyMzU4MjU5LCJhdWQiOlsieDowIiwieDoxIiwieDoyIiwiZDoxIiwiZDoyIiwieDoxIiwieDowIl0sInN1YiI6ImFjY2Vzc190b2tlbiIsImF0X2hhc2giOiJnQUFBQUFCbjJrYnp1WWtxaExaMndfbm9MdTFFTWVJdVhYOXZ0V1FqUjVlUjhEdk5IcS1od0tETkx6VW9LMzRQNE1KZWhGY0h2QkFkTUxTN05ycE52N1p2ZGRyanhrNXZaQy0yN3UzNGFadjJqQ2FEbjkyVWxVZz0iLCJkaXNwbGF5X25hbWUiOiJBTktVUiBTQVJBU1dBVCIsIm9tcyI6IksxIiwiaHNtX2tleSI6ImZlODhjOTZiZTg2NTUwOTU4MDBlMTIwYjQxNzUwNmJiOThiN2I0MmY0OTQ2MGE2Y2YyMDNkMGE2IiwiaXNEZHBpRW5hYmxlZCI6Ik4iLCJpc010ZkVuYWJsZWQiOiJOIiwiZnlfaWQiOiJZQTQ2MjE4IiwiYXBwVHlwZSI6MTAwLCJwb2FfZmxhZyI6Ik4ifQ.QQWzSioZ-qGFJ2N8W1QPNdMgtmCpWjTsPsSCpYycp0c"
+access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiZDoxIiwiZDoyIiwieDowIiwieDoxIiwieDoyIl0sImF0X2hhc2giOiJnQUFBQUFCbjcyeWlnUDhQY3hZOGp3SDRUbG9FRU92enE2Y184YjJBWUlIUzhZYVJzdWcwd2w0NEt3djBGRnhseFBqWWR0YXphc3g5Y2loRC1qZUNFaGxVM1BndWV4a3BXWGdLVlFOcmd4TlF3WkFTVkJpY1BLUT0iLCJkaXNwbGF5X25hbWUiOiIiLCJvbXMiOiJLMSIsImhzbV9rZXkiOiIyOTAzNWE4YjAzMTJkMmZjYWFmYzY1YTA1MDhlNTIzZjg5YzRiMWNmOTYxMjhkOThkNjg0ODhjMSIsImlzRGRwaUVuYWJsZWQiOiJOIiwiaXNNdGZFbmFibGVkIjoiTiIsImZ5X2lkIjoiWUE0NjIxOCIsImFwcFR5cGUiOjEwMCwiZXhwIjoxNzQzODEzMDAwLCJpYXQiOjE3NDM3NDQxNjIsImlzcyI6ImFwaS5meWVycy5pbiIsIm5iZiI6MTc0Mzc0NDE2Miwic3ViIjoiYWNjZXNzX3Rva2VuIn0.nrgmyhbTIs1XJ2y-WtlHxOqv8I3082sbgCBeKroOCfI"
 
 # ✅ Initialize Fyers API
 fyers = fyersModel.FyersModel(client_id=app_id, token=access_token, is_async=False)
 
+
+
 # ✅ MySQL Database Connection
 db_config = {
     "host": "localhost",
-    "user": "Algo_Trading",
+    "user": "sec_user",
     "password": "Apple@1331",
-    "database": "Historical_data_2024"
+    "database": "Algo_trading"
 }
 con = mdb.connect(**db_config)
 cur = con.cursor()
@@ -26,14 +28,24 @@ def get_nifty50_tickers():
     cur.execute("SELECT id, ticker, name FROM symbol")
     return cur.fetchall()
 
+# ✅ Get Last Available Date for a Symbol
+def get_last_available_date(symbol_id):
+    """Fetch the most recent date for which data is available in MySQL."""
+    cur.execute(
+        "SELECT MAX(price_date) FROM daily_price WHERE symbol_id = %s",
+        (symbol_id,)
+    )
+    result = cur.fetchone()
+    return result[0] if result and result[0] else None
+
 # ✅ Fetch Historical Data from Fyers API
 def fetch_historical_data(symbol, start_date, end_date):
     """Fetches historical stock data from Fyers API in chunks."""
     all_prices = []
     batch_size = 100  # Fetch 100 days per request
     
-    while start_date < end_date:
-        batch_end = min(start_date + datetime.timedelta(days=batch_size), end_date)
+    while start_date <= end_date:
+        batch_end = min(start_date + datetime.timedelta(days=batch_size - 1), end_date)
         payload = {
             "symbol": f"NSE:{symbol}-EQ",
             "resolution": "D",
@@ -45,32 +57,40 @@ def fetch_historical_data(symbol, start_date, end_date):
         
         for attempt in range(3):  # Retry mechanism
             response = fyers.history(data=payload)
-            if "candles" in response:
+            if response and "candles" in response and response["candles"]:
                 break
-            print(f"⚠️ Retry {attempt+1}/3 for {symbol}...")
+            print(f"⚠️ Retry {attempt+1}/3 for {symbol} ({start_date} to {batch_end})...")
             time.sleep(2)
         
-        if "candles" in response:
+        if response and "candles" in response and response["candles"]:
             all_prices.extend([
                 (datetime.datetime.fromtimestamp(d[0]), d[1], d[2], d[3], d[4], d[5])
                 for d in response["candles"]
             ])
         else:
-            print(f"❌ Failed to fetch data for {symbol}")
+            print(f"❌ No data found for {symbol} ({start_date} to {batch_end})")
         
-        start_date = batch_end + datetime.timedelta(days=1)
+        start_date = batch_end + datetime.timedelta(days=1)  # Ensure continuous data fetch
     
     return all_prices
 
 # ✅ Insert Data into MySQL
 def insert_into_db(data_vendor_id, symbol_id, stock_name, price_data):
     """Inserts historical stock data into MySQL."""
+    if not price_data:
+        print(f"⚠️ No new data to insert for {stock_name}")
+        return
+
     now = datetime.datetime.now(datetime.timezone.utc)
     insert_values = [
         (data_vendor_id, symbol_id, stock_name, d[0], now, now, d[1], d[2], d[3], d[4], d[5])
         for d in price_data
     ]
     
+    # 🔥 Debug: Print first 5 rows before inserting
+    print(f"🛠️ Preparing to insert {len(price_data)} rows into daily_price:")
+    print(insert_values[:5])  
+
     query = """
     INSERT INTO daily_price (
         data_vendor_id, symbol_id, stock_name, price_date, created_date,
@@ -78,27 +98,45 @@ def insert_into_db(data_vendor_id, symbol_id, stock_name, price_data):
         close_price, volume
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
+    
     try:
         cur.executemany(query, insert_values)
         con.commit()
+        print(f"✅ Successfully inserted {len(price_data)} records for {stock_name}")
     except mdb.Error as e:
-        print(f"❌ MySQL Error: {e}")
+        print(f"❌ MySQL Error for {stock_name}: {e}")
+        con.rollback()
+
 
 # ✅ Main Execution
 if __name__ == "__main__":
     tickers = get_nifty50_tickers()
     total_tickers = len(tickers)
-    start_date = datetime.date(2024, 1, 1)
-    end_date = datetime.date(2024, 12, 31)
+    today = datetime.date.today()
+    end_date = today - datetime.timedelta(days=1)  # ✅ Fetch data only until yesterday
     
     for i, (symbol_id, ticker, stock_name) in enumerate(tickers):
-        print(f"📊 Fetching data for {stock_name} ({ticker}) ({i+1}/{total_tickers})...")
-        historical_data = fetch_historical_data(ticker, start_date, end_date)
+        print(f"📊 Checking last available date for {stock_name} ({ticker})...")
         
-        if historical_data:
-            insert_into_db(1, symbol_id, stock_name, historical_data)
-            print(f"✅ Inserted {len(historical_data)} rows for {stock_name} ({ticker})")
+        last_available_date = get_last_available_date(symbol_id)
+        
+        if last_available_date:
+            start_date = last_available_date.date() + datetime.timedelta(days=1)
+            print(f"📅 Last available date: {last_available_date} → Fetching from {start_date} to {end_date}")
         else:
-            print(f"⚠️ No data found for {stock_name} ({ticker})")
+            start_date = datetime.date(2024, 1, 1)
+            print(f"🆕 No data found in DB → Fetching from {start_date} to {end_date}")
+        
+        # Fetch data if there are missing dates
+        if start_date <= end_date:
+            historical_data = fetch_historical_data(ticker, start_date, end_date)
+            
+            if historical_data:
+                insert_into_db(1, symbol_id, stock_name, historical_data)
+                print(f"✅ Inserted {len(historical_data)} rows for {stock_name} ({ticker})")
+            else:
+                print(f"⚠️ No new data found for {stock_name} ({ticker})")
+        else:
+            print(f"✅ Data is already up-to-date for {stock_name} ({ticker})")
     
     print("🎉 Data fetching complete!")

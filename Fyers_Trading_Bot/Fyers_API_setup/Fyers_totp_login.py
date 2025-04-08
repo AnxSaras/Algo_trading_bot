@@ -9,7 +9,7 @@ import hashlib
 FY_ID = "YA46218"  # Your fyers ID
 APP_ID_TYPE = "2"  # Keep default as 2, It denotes web login
 TOTP_KEY = "ZVL7YKCTGNZBKYOFYIIOQFZWBXFJYKWO"  # TOTP secret is generated when we enable 2Factor TOTP from myaccount portal
-PIN = "2580"  # User pin for fyers account
+PIN = "1331"  # User pin for fyers account
 APP_ID = "ISVT1FBO9P"  # "7ZZHXHVNKN"  # App ID from myapi dashboard is in the form appId-appType. Example - EGNI8CE27Q-100, In this code EGNI8CE27Q will be APP_ID and 100 will be the APP_TYPE
 REDIRECT_URI = "https://www.google.com"  # Redirect url from the app.
 APP_TYPE = "100"

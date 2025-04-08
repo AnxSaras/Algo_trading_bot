@@ -1,11 +1,40 @@
-# Ignore Python virtual environment
-.venv/
-venv/
+# Ignore secrets
+*.env
+.env
+**/.env
+config.py
+**/config.py
+*.key
+**/*.key
+secrets.txt
+**/secrets.txt
+credentials.json
+**/credentials.json
+
+# Common sensitive patterns
+*.pem
+*.crt
+*.der
+*.p12
+*.pfx
+
+# Avoid accidental commits of Python bytecode
 __pycache__/
+*.py[cod]
 
-# Ignore VS Code settings
-.vscode/
-
-# Ignore system files
+# Ignore system & IDE files
 .DS_Store
-AWS/ANX_AWS_accessKeys.csv
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Optional: Ignore database files or logs if any
+*.log
+*.sqlite
+*.db
+*.bak
+*.sql
+
+# Ignore Jupyter notebook checkpoints if using any
+.ipynb_checkpoints/
