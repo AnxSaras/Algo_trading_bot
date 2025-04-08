@@ -11,7 +11,7 @@ from openpyxl.styles import PatternFill
 db_config = {
     "host": "localhost",
     "user": "Algo_Trading",
-    "password": "Apple@1234",
+    "password": "v",
     "database": "Historical_data_2024"
 }
 

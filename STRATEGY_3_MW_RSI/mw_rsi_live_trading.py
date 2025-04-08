@@ -12,10 +12,11 @@ import logging
 from collections import deque
 import requests
 import json
+from dotenv import load_dotenv
 
 # ✅ Configure Telegram Bot
-TELEGRAM_BOT_TOKEN = "AAEh17Ee9pgjcCv0Skuyq3kxx5kjiEfi_JI"
-TELEGRAM_CHAT_ID = "5016132683"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 def send_telegram_alert(message):
     """Send alert to Telegram"""
@@ -32,14 +33,14 @@ def send_telegram_alert(message):
 
 
 # FYERS API Credentials
-client_id = "ISVT1FBO9P-100"
-access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiZDoxIiwiZDoyIiwieDowIiwieDoxIiwieDoyIl0sImF0X2hhc2giOiJnQUFBQUFCbjcyeWlnUDhQY3hZOGp3SDRUbG9FRU92enE2Y184YjJBWUlIUzhZYVJzdWcwd2w0NEt3djBGRnhseFBqWWR0YXphc3g5Y2loRC1qZUNFaGxVM1BndWV4a3BXWGdLVlFOcmd4TlF3WkFTVkJpY1BLUT0iLCJkaXNwbGF5X25hbWUiOiIiLCJvbXMiOiJLMSIsImhzbV9rZXkiOiIyOTAzNWE4YjAzMTJkMmZjYWFmYzY1YTA1MDhlNTIzZjg5YzRiMWNmOTYxMjhkOThkNjg0ODhjMSIsImlzRGRwaUVuYWJsZWQiOiJOIiwiaXNNdGZFbmFibGVkIjoiTiIsImZ5X2lkIjoiWUE0NjIxOCIsImFwcFR5cGUiOjEwMCwiZXhwIjoxNzQzODEzMDAwLCJpYXQiOjE3NDM3NDQxNjIsImlzcyI6ImFwaS5meWVycy5pbiIsIm5iZiI6MTc0Mzc0NDE2Miwic3ViIjoiYWNjZXNzX3Rva2VuIn0.nrgmyhbTIs1XJ2y-WtlHxOqv8I3082sbgCBeKroOCfI"
+client_id = os.getenv("client_id")
+access_token = os.getenv("FYERS_ACCESS_TOKEN")
 
 # Database Configuration
 db_config = {
     "host": "localhost",
     "user": "sec_user",
-    "password": "Apple@1331",
+    "password": os.getenv("db_password"),
     "database": "Algo_trading"
 }
 

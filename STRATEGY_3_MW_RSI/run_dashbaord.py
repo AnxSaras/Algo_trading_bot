@@ -4,11 +4,12 @@ import webbrowser
 import time
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
+import os
 
 # DB Credentials
 username = 'sec_user'
-raw_password = 'Apple@1331'
-password = urllib.parse.quote_plus(raw_password)  # Encode special characters
+db_password = os.getenv("Apple@1331")
+password = urllib.parse.quote_plus(db_password)  # Encode special characters
 host = 'localhost'
 port = 3306
 database = 'Algo_trading'

@@ -5,10 +5,14 @@ import time
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import OperationalError
 from urllib.parse import quote_plus
+from dotenv import load_dotenv
+load_dotenv()
 
 # --- MySQL connection test ---
 username = 'sec_user'
-password = quote_plus('Apple@1331')  # Escaped
+#db_password = os.getenv("db_password")
+password = quote_plus(db_password)
+#password = quote_plus('v')  # Escaped
 host = 'localhost'
 port = 3306
 database = 'Algo_trading'
