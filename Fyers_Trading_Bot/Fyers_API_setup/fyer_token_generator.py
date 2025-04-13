@@ -36,8 +36,6 @@ URL_VALIDATE_AUTH_CODE = BASE_URL_2 + "/validate-authcode"
 SUCCESS = 1
 ERROR = -1
 
-# All your functions (send_login_otp, generate_totp, etc.) remain unchanged...
-
 def send_login_otp(fy_id, app_id):
     try:
         payload = {"fy_id": fy_id, "app_id": app_id}
@@ -116,6 +114,36 @@ def validate_authcode(app_id_hash, auth_code):
     except Exception as e:
         return [ERROR, e]
 
+def update_env_file(key, value):
+    """Update or add a key-value pair in the .env file."""
+    env_file = ".env"
+    new_line = f"{key}={value}"
+    
+    # Read existing .env content
+    if os.path.exists(env_file):
+        with open(env_file, 'r') as file:
+            lines = file.readlines()
+        
+        # Check if key exists
+        key_exists = False
+        for i, line in enumerate(lines):
+            if line.startswith(f"{key}="):
+                lines[i] = new_line + "\n"
+                key_exists = True
+                break
+        
+        # If key doesn't exist, append it
+        if not key_exists:
+            lines.append(new_line + "\n")
+        
+        # Write updated content back to .env
+        with open(env_file, 'w') as file:
+            file.writelines(lines)
+    else:
+        # Create .env if it doesn't exist
+        with open(env_file, 'w') as file:
+            file.write(new_line + "\n")
+
 def main():
     send_otp_result = send_login_otp(fy_id=FY_ID, app_id=APP_ID_TYPE)
     if send_otp_result[0] != SUCCESS:
@@ -157,16 +185,10 @@ def main():
     print("validate_authcode success")
 
     access_token = APP_ID + "-" + APP_TYPE + ":" + validate_authcode_result[1]
-    token1 = validate_authcode_result[1]
-
-    with open("fyers_appid.txt", 'w') as file:
-        file.write(APP_ID + "-" + APP_TYPE)
-        print('App ID saved to fyers_appid.txt')
-
-    with open("fyers_token.txt", 'w') as file:
-        file.write(token1)
-        print('Access token saved to fyers_token.txt')
-
+    
+    # Update FYERS_ACCESS_TOKEN in .env
+    update_env_file("FYERS_ACCESS_TOKEN", access_token)
+    print("FYERS_ACCESS_TOKEN updated in .env")
 
 if __name__ == "__main__":
     main()

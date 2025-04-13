@@ -13,13 +13,11 @@ access_token = os.getenv("FYERS_ACCESS_TOKEN")
 # ✅ Initialize Fyers API
 fyers = fyersModel.FyersModel(client_id=app_id, token=access_token, is_async=False)
 
-
-
 # ✅ MySQL Database Connection
 db_config = {
     "host": "localhost",
     "user": "sec_user",
-    "password": "Apple@1331",
+    "password": os.getenv("db_password"),
     "database": "Algo_trading"
 }
 con = mdb.connect(**db_config)
@@ -109,7 +107,6 @@ def insert_into_db(data_vendor_id, symbol_id, stock_name, price_data):
     except mdb.Error as e:
         print(f"❌ MySQL Error for {stock_name}: {e}")
         con.rollback()
-
 
 # ✅ Main Execution
 if __name__ == "__main__":
