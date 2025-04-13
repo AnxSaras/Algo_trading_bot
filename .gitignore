@@ -1,0 +1,54 @@
+# Ignore secrets
+*.env
+.env
+**/.env
+config.py
+**/config.py
+*.key
+**/*.key
+secrets.txt
+**/secrets.txt
+credentials.json
+**/credentials.json
+
+# Common sensitive patterns
+*.pem
+*.crt
+*.der
+*.p12
+*.pfx
+
+# Avoid accidental commits of Python bytecode
+__pycache__/
+*.py[cod]
+
+# Ignore system & IDE files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Optional: Ignore database files or logs if any
+*.log
+*.sqlite
+*.db
+*.bak
+*.sql
+
+# Ignore Jupyter notebook checkpoints if using any
+.ipynb_checkpoints/
+
+# Token storage files used in your Fyers bot
+fyers_token.txt
+fyers_appid.txt
+
+# Mac system trash (just in case)
+.Spotlight-V100
+.Trashes
+config.json
+# Additional files
+*.xlsx
+AWS/
+Sql_Data/
+Anx.session.sql
